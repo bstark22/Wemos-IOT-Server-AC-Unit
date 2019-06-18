@@ -1,0 +1,118 @@
+/*
+Update password and user name, and verify GPIO Pin configurations. Built as API for RPI Server to comunicate 
+with Wemos hardware (sensors, relays, etc.)
+*/
+
+#include <ESP8266WiFi.h>
+const int A = 5;
+const int B = 0;
+const int C = 14;
+const int D = 4;
+const int E = 13;
+const int ledPin =  LED_BUILTIN;
+int val;
+const char* ssid = "InsertWiFiName";
+const char* password = "InsertWIFIPassword";
+
+
+// Create an instance of the server
+// specify the port to listen on as an argument
+WiFiServer server(80);
+
+void setup() {
+  
+  delay(5);
+
+  // Prepare GPIO
+  pinMode(A, OUTPUT);
+  pinMode(B, OUTPUT);
+  pinMode(C, OUTPUT);
+  pinMode(D, OUTPUT);
+  pinMode(E, OUTPUT);
+  pinMode(ledPin, OUTPUT);
+
+  // Connect to WiFi with credentials
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
+
+
+  // Start the server
+  server.begin();
+  // Record IP Address
+  char IP = WiFi.localIP();
+  
+  digitalWrite(ledPin, LOW);
+  delay(10);
+  digitalWrite(ledPin,HIGH);
+  delay(6000);
+  digitalWrite(ledPin,LOW);
+}
+
+void loop() {
+  String Vdisplay="null";
+  // Check if a client has connected
+  WiFiClient client = server.available();
+  if (!client) {
+    return;
+  }
+
+  // Wait until the client sends some data
+  while (!client.available()) {
+    delay(1);
+  }
+
+  // Read the first line of the request
+  String req = client.readStringUntil('\r');
+  client.flush();
+
+
+  // Match the request
+  
+  if (req.indexOf("/A") != -1) {
+    digitalWrite(A, HIGH);
+    delay(10);
+    digitalWrite(A, LOW);
+    if val==1{val=0;}
+    else {val=1;}
+  } else if (req.indexOf("/B") != -1) {
+    digitalWrite(B, HIGH);
+    delay(10);
+    digitalWrite(B, LOW);
+  } else if (req.indexOf("/C") != -1) {
+    digitalWrite(C, HIGH);
+    delay(10);
+    digitalWrite(C, LOW);
+  } else if (req.indexOf("/D") != -1) {
+    digitalWrite(D, HIGH);
+    delay(10);
+    digitalWrite(D, LOW);    
+   } else if (req.indexOf("/E") != -1) {
+    digitalWrite(E, HIGH);
+    delay(10);
+    digitalWrite(E, LOW);
+  } else {
+    client.stop();
+    return;
+  }
+
+if (val==1){ L="1";}
+else if (val==0) { L="0";}
+else { L="NUL";}
+
+  client.flush();
+
+  // Prepare the response
+  String s = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"+L+"|"+Vdisplay ;
+
+  // Send the response to the client
+  client.print(s);
+  delay(1);
+
+  // The client will actually be disconnected
+  // when the function returns and 'client' object is detroyed
+}
